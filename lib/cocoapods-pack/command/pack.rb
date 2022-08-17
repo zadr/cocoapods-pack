@@ -393,7 +393,9 @@ module Pod
       end
 
       def podspec_dir_relative_glob(glob, options = {})
-        Pod::Sandbox::PathList.new(Pathname(podspec_dir)).glob(glob, options)
+        Dir.glob(File.join(podspec_dir, glob))
+          .map { |file| Pathname(file) }
+          .filter { |file| File.symlink?(file) == true || File.directory?(file) == false }
       end
 
       def stage_file(file_path, stage_dir)
@@ -407,7 +409,7 @@ module Pod
         staged_file_path = File.join(staged_folder, pathname.basename)
         raise Informative, "File #{staged_file_path} already exists." if File.exist?(staged_file_path)
 
-        FileUtils.copy_file(pathname.to_path, staged_file_path)
+        FileUtils.copy_entry(pathname.to_path, staged_file_path)
       end
 
       def podspec_dir
